@@ -1,19 +1,14 @@
-from pyftpdlib.authorizers import DummyAuthorizer
-from pyftpdlib.handlers import FTPHandler
-from pyftpdlib.servers import FTPServer
+from flask import Flask, send_from_directory
 
-# Создание авторизатора без логина и пароля
-authorizer = DummyAuthorizer()
-authorizer.add_anonymous("./ftp-files")
+app = Flask(__name__)
 
-# Добавление анонимного пользователя
-# Пользователю присваиваются права на чтение и запись в указанной директории
-authorizer.add_user("anonymous", "", "./ftp-files", perm="elradfmw")
+# Задайте директорию, из которой можно будет скачивать файлы
+UPLOAD_FOLDER = '/home/user/ftp-server/ftp-files'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Создание обработчика с использованием авторизатора
-handler = FTPHandler
-handler.authorizer = authorizer
+@app.route('/download/<filename>', methods=['GET'])
+def download_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-# Запуск FTP-сервера на порту 21
-server = FTPServer(("0.0.0.0", 21), handler)
-server.serve_forever()
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=6000)
